@@ -1,0 +1,11 @@
+sqlite:
+    image: sqlite
+
+mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+  
+postgres:
+    image: postgres
+  

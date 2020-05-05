@@ -1,0 +1,94 @@
+body {
+    margin: 0;
+    color: #293c4b;
+    overflow: hidden;
+    letter-spacing: 0.04em;
+    line-height: 1.5em;
+}
+
+text {
+    font-family: "SF Pro Text", sans-serif;
+    font-size: 10px;
+    fill: rgba(115, 115, 115, 1);
+}
+
+gmap,
+google-map-cached {
+    width: 100%;
+    height: 100%;
+}
+
+
+
+.blurred {
+    backdrop-filter: blur(4px);
+}
+
+.animatesShadow:not(.animatesNone) {
+    transition: box-shadow, transform, border 250ms 50ms;
+    transition-timing-function: var(--cubic)
+}
+
+.animatesAll20Seconds:not(.animatesNone) {
+    transition: all 20000ms 50ms;
+    transition-timing-function: linear;
+}
+
+.animatesAll:not(.animatesNone) {
+    transition: all 250ms 0ms;
+    transition-timing-function: var(--cubic)
+}
+
+.animatesAllDelayed:not(.animatesNone) {
+    transition: all 250ms 100ms;
+    transition-timing-function: var(--cubic)
+}
+
+.safari-clip {
+    transform: perspective(0);
+}
+
+
+/* Push Google Logo up for attribution 
+  reasons when the slider is visible (google-map is selevted)*/
+
+#google-map.selected div div a[target='_blank'] div {
+    margin-bottom: 100px;
+}
+
+google-map-cached {
+    width: 100%;
+    flex-grow: 100000;
+    display: flex;
+    flex-direction: column;
+    white-space: pre;
+}
+
+
+@media (max-width: 570px) {
+    .mobileHidden {
+        opacity: 0;
+    }
+}
+
+
+.blurred {
+    backdrop-filter: blur(4px);
+}
+
+a.button-link:not(.ignoreCss),
+div.cssResponsive[role='button']:not(.ignoreCss) {
+    text-align: center;
+    text-decoration: none;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1rem;
+    letter-spacing: .1rem;
+    height: 3.5rem;
+    padding: 0 2rem;
+    border-radius: .2rem;
+}
+
+html {
+    --cubic: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+}
