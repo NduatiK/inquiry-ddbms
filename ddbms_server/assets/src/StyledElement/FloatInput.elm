@@ -81,7 +81,7 @@ view attributes { title, caption, errorCaption, value, onChange, placeholder, ar
                     Maybe.withDefault 0 minimum
 
                 maximumValue =
-                    Maybe.withDefault 100000 maximum
+                    Maybe.withDefault 10000000 maximum
 
                 newFloatInput cleanedStr =
                     let
@@ -122,17 +122,5 @@ view attributes { title, caption, errorCaption, value, onChange, placeholder, ar
                 icon
                 attributes
                 []
-
-        -- [ Input.button []
-        --     { label = Icons.subtract [ width <| px 24, height <| px 24 ]
-        --     , onPress = Just (onChange (value - 1))
-        --     }
-        -- , el [ Background.color (rgba 0 0 0 0.12), width <| px 1, height <| px 20 ] none
-        -- , Input.button []
-        --     { label = Icons.add [ width <| px 24, height <| px 24 ]
-        --     , onPress = Just (onChange (value + 1))
-        --     }
-        -- , el [ width <| px 0, height <| px 20 ] none
-        -- ]
     in
     body

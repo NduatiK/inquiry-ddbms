@@ -3,6 +3,8 @@ module Api.Endpoint exposing
     , get
     , patch
     , post
+    , reset
+    , setup
     )
 
 import Http exposing (Body)
@@ -62,9 +64,19 @@ patch endpoint body decoder =
 -- login : Endpoint
 -- login =
 --     url [ "auth", "manager", "login" ] []
--- activate : Endpoint
--- activate =
---     url [ "auth", "manager", "exchange_token" ] []
+
+
+setup : Endpoint
+setup =
+    url [ "setup" ] []
+
+
+reset : Endpoint
+reset =
+    url [ "reset" ] []
+
+
+
 -- PRIVATE
 
 

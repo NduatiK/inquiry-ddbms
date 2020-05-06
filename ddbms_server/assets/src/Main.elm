@@ -136,7 +136,7 @@ changeRouteWithUpdatedSessionTo maybeRoute model =
                         |> updateWith Queries GotQueriesMsg
 
                 Just Navigation.Setup ->
-                    Setup.init
+                    Setup.init model.navKey
                         |> updateWith Setup GotSetupMsg
     in
     ( { model | page = updatedPage, route = maybeRoute }, msg )
@@ -183,7 +183,12 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model_ =
-    Sub.none
+    case model_.page of
+        Queries pageModel ->
+            Sub.map GotQueriesMsg (Queries.subscriptions pageModel)
+
+        _ ->
+            Sub.none
 
 
 main : Program (Maybe Value) Model Msg

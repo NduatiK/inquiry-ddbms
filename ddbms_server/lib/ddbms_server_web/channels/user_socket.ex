@@ -2,7 +2,7 @@ defmodule DdbmsServerWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", DdbmsServerWeb.RoomChannel
+  channel "*", DdbmsServerWeb.UserChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

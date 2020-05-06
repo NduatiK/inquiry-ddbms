@@ -258,11 +258,11 @@ ghostButton :
     -> Element msg
 ghostButton attrs { title, onPress, icon } =
     button
-        ([ Border.width 3, Border.color Colors.purple, Background.color Colors.white ] ++ attrs)
+        ([ Border.width 3, Border.color Colors.purple, Background.color Colors.white, Font.color Colors.purple ] ++ attrs)
         { label =
             row [ spacing 8 ]
-                [ icon [ alpha 1, Colors.fillPurple ]
-                , el [ centerY, Font.color Colors.purple ] (text title)
+                [ icon [ alpha 1, Colors.fillErrorRed ]
+                , el [ centerY ] (text title)
                 ]
         , onPress = onPress
         }
@@ -364,7 +364,7 @@ multilineInput attributes { title, caption, errorCaption, value, onChange, place
     let
         input =
             Input.multiline
-                (Style.labelStyle ++ [ height fill, centerY, Border.width 0, Background.color (rgba 0 0 0 0), htmlAttribute (id (String.replace " " "-" (String.toLower ariaLabel))) ])
+                (Style.labelStyle ++ [ height fill, centerY, Border.width 0, Background.color (rgba 0 0 0 0), htmlAttribute (id (String.replace " " "-" (String.toLower ariaLabel))) ] ++ attributes)
                 { onChange = onChange
                 , text = value
                 , placeholder = placeholder
@@ -372,7 +372,7 @@ multilineInput attributes { title, caption, errorCaption, value, onChange, place
                 , spellcheck = True
                 }
     in
-    wrappedInput input title caption errorCaption icon attributes []
+    input
 
 
 emailInput :

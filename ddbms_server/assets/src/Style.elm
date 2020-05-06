@@ -21,6 +21,7 @@ module Style exposing
     , inputStyle
     , labelStyle
     , mobileHidden
+    , monospace
     , normalScrolling
     , reverseScrolling
     , stickyStyle
@@ -172,15 +173,16 @@ defaultFontFace =
     ]
 
 
+monospace : Attribute msg
+monospace =
+    Font.family
+        [ Font.typeface "Space Mono"
+        , Font.typeface "Fira Code"
+        , Font.monospace
+        ]
 
--- [ Font.family
---     [
--- Font.typeface "SF Pro Text"
---Font.typeface "Space Mono"
---     , Font.typeface "Fira Code"
---     , Font.monospace
---     ]
--- ]
+
+
 -- CUSTOMIZATIONS
 
 

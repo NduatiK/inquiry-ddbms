@@ -19,8 +19,10 @@ defmodule DdbmsServerWeb.Router do
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", DdbmsServerWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", DdbmsServerWeb do
+    pipe_through :api
+
+    post "/setup", PageController, :setup
+    post "/reset", PageController, :reset
+  end
 end

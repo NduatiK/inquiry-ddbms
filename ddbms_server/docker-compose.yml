@@ -1,9 +1,15 @@
-
 mysql:
     image: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: password
-  
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_DATABASE: mysql
+      
 postgres:
     image: postgres
+
+mariadb:
+    image: mariadb
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_DATABASE: maria_db
   

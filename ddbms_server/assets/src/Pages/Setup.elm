@@ -72,7 +72,6 @@ type Type
     | Double
     | Integer
     | VarChar
-    | Bool
 
 
 type DB
@@ -160,7 +159,7 @@ type Msg
     | PickedUpCondition (Maybe Condition)
     | SetFilterField
     | ClearFilterField
-    | UpdatedConditionValue DB FloatInput
+    | UpdatedConditionValue (List DB) FloatInput
     | SetCondition (List DB)
     | Save
     | ServerResponse (WebData ())
@@ -395,23 +394,28 @@ update msg model_ =
                 _ ->
                     ( model, Cmd.none )
 
-        UpdatedConditionValue db input ->
+        UpdatedConditionValue dbs input ->
             case model.currentStep of
                 AttributeAllocations data ->
                     ( { model
                         | conditions =
-                            case Maybe.withDefault Nothing (Dict.get (dbName db) model.conditions) of
-                                Just ( condition, _ ) ->
-                                    Dict.insert (dbName db)
-                                        (Just
-                                            ( applyValue condition (truncate (FloatInput.toFloat input))
-                                            , input |> FloatInput.toFloat |> truncate |> toFloat |> FloatInput.fromFloat
-                                            )
-                                        )
-                                        model.conditions
+                            List.foldl
+                                (\db acc ->
+                                    case Maybe.withDefault Nothing (Dict.get (dbName db) acc) of
+                                        Just ( condition, _ ) ->
+                                            Dict.insert (dbName db)
+                                                (Just
+                                                    ( applyValue condition (truncate (FloatInput.toFloat input))
+                                                    , input |> FloatInput.toFloat |> truncate |> toFloat |> FloatInput.fromFloat
+                                                    )
+                                                )
+                                                acc
 
-                                Nothing ->
-                                    model.conditions
+                                        Nothing ->
+                                            acc
+                                )
+                                model.conditions
+                                dbs
                       }
                     , Cmd.none
                     )
@@ -585,8 +589,9 @@ update msg model_ =
             in
             case response of
                 Success () ->
-                    ( newModel, Navigation.rerouteTo model.key Navigation.Queries )
+                    ( newModel, Cmd.none )
 
+                -- ( newModel, Navigation.rerouteTo model.key Navigation.Queries )
                 Failure error ->
                     ( { newModel | problems = [ "Server error" ] }, Cmd.none )
 
@@ -739,7 +744,7 @@ typeDropDown model =
                     []
 
         types =
-            [ PrimaryKey, VarChar, Double, Integer, Bool ]
+            [ PrimaryKey, VarChar, Double, Integer ]
     in
     StyledElement.dropDown
         [ width
@@ -1142,14 +1147,14 @@ viewSplitStrategySelection model =
                     List.filter (\x -> (fieldToType x == Integer || fieldToType x == Double) && Just x /= model.filterField) visibleFields
             in
             column [ width fill, height fill, padding 40, spacing 10 ]
-                [ el [ height (px 100) ] none
+                [ el [ height (px 10) ] none
                 , case model.filterField of
                     Nothing ->
                         el ([ Border.dashed, Border.width 1, paddingXY 40 10, centerX ] ++ droppable { onDrop = SetFilterField, onDragOver = NoOp }) (text "Filter field")
 
                     Just field ->
                         el ([ Border.width 1, paddingXY 40 10, centerX, Events.onClick ClearFilterField ] ++ droppable { onDrop = SetFilterField, onDragOver = NoOp }) (text (fieldName field))
-                , el [ centerX ] (viewStrategy model.selectedMode 40 True model)
+                , el [ centerX, centerY ] (viewStrategy model.selectedMode 40 True model)
                 , row [ centerX, alignBottom, spacing 10 ]
                     (List.map
                         (\cond ->
@@ -1159,6 +1164,7 @@ viewSplitStrategySelection model =
                                        , Border.width 1
                                        , Font.color Colors.darkness
                                        , Border.color (Colors.withAlpha Colors.darkness 0.5)
+                                       , Style.monospace
                                        ]
                                     ++ draggable
                                         { onDragEnd = PickedUpCondition Nothing
@@ -1233,8 +1239,10 @@ viewStrategy mode scale showFieldSlots model =
                                 Just ( cond, _ ) ->
                                     el
                                         ([ Border.solid
+                                         , paddingXY 12 13
                                          , Border.width 2
-                                         , paddingXY 40 12
+                                         , Border.color Colors.darkGreen
+                                         , Style.monospace
 
                                          -- , Events.onClick (RemoveAllocation field)
                                          ]
@@ -1255,7 +1263,8 @@ viewStrategy mode scale showFieldSlots model =
                                     FloatInput.view
                                         [ width
                                             (fill
-                                                |> maximum 300
+                                                |> minimum 100
+                                                |> maximum 100
                                             )
                                         , alignTop
                                         ]
@@ -1263,7 +1272,7 @@ viewStrategy mode scale showFieldSlots model =
                                         , caption = Nothing
                                         , errorCaption = Nothing
                                         , value = value
-                                        , onChange = UpdatedConditionValue db
+                                        , onChange = UpdatedConditionValue dbs
                                         , placeholder = Nothing
                                         , ariaLabel = ""
                                         , icon = Nothing
@@ -1274,7 +1283,7 @@ viewStrategy mode scale showFieldSlots model =
                                 Nothing ->
                                     none
                     in
-                    column [ moveRight offset ]
+                    row [ moveRight offset ]
                         [ emptyConditionSlot
                         , emptyValueSlot
                         ]
@@ -1453,9 +1462,9 @@ conditionToRange condition =
             ( Inclusive (toFloat value), Inclusive (toFloat value) )
 
 
-validStrategy mode conditions =
+validStrategy mode conditions_ =
     let
-        compareRange min1 min2 =
+        compareRangeMin min1 min2 =
             case ( min1, min2 ) of
                 ( Inclusive min1_, Inclusive min2_ ) ->
                     compare min1_ min2_
@@ -1467,15 +1476,34 @@ validStrategy mode conditions =
                     else
                         LT
 
-                ( Exclusive min1_, Inclusive min2_ ) ->
-                    if min1_ == min2_ then
+                ( Exclusive min2_, Inclusive min1_ ) ->
+                    if min1_ > min2_ then
                         LT
 
-                    else if min1_ > min2_ then
+                    else
+                        GT
+
+                ( Exclusive min1_, Exclusive min2_ ) ->
+                    compare min1_ min2_
+
+        compareRangeMax min1 min2 =
+            case ( min1, min2 ) of
+                ( Inclusive min1_, Inclusive min2_ ) ->
+                    compare min1_ min2_
+
+                ( Inclusive min1_, Exclusive min2_ ) ->
+                    if min1_ >= min2_ then
                         GT
 
                     else
                         LT
+
+                ( Exclusive min2_, Inclusive min1_ ) ->
+                    if min1_ >= min2_ then
+                        LT
+
+                    else
+                        GT
 
                 ( Exclusive min1_, Exclusive min2_ ) ->
                     compare min1_ min2_
@@ -1497,21 +1525,18 @@ validStrategy mode conditions =
                 ( min2, max2 ) =
                     conditionToRange cond2
             in
-            case ( min1, min2 ) of
-                ( Exclusive min1_, Exclusive min2_ ) ->
-                    if min1_ == min2_ then
-                        compareRange max1 max2
-
-                    else
-                        compareRange min1 min2
+            case compareRangeMin min1 min2 of
+                EQ ->
+                    compareRangeMax max1 max2
 
                 _ ->
-                    compareRange min1 min2
+                    compareRangeMin min1 min2
 
-        isComplete =
+        isComplete conditions =
             let
                 sortedConditions =
-                    List.map conditionToRange (List.sortWith compareConditions conditions)
+                    Debug.log "sortedConditions"
+                        (List.map conditionToRange (List.sortWith compareConditions conditions))
 
                 _ =
                     Debug.log "sortedConditions" sortedConditions
@@ -1520,14 +1545,14 @@ validStrategy mode conditions =
                 (\( minValue, maxValue ) ( ( oldMin, oldMax ), overlaps ) ->
                     let
                         newMin =
-                            if compareRange oldMin minValue /= LT && compareRange oldMin maxValue /= GT then
+                            if compareRangeMin oldMin minValue /= LT && compareRangeMin oldMin maxValue /= GT then
                                 minValue
 
                             else
                                 oldMin
 
                         newMax =
-                            if compareRange oldMax maxValue /= GT && compare (rangeValue oldMax) (rangeValue minValue) /= LT then
+                            if compareRangeMax oldMax maxValue /= GT && compare (rangeValue oldMax) (rangeValue minValue) /= LT then
                                 maxValue
 
                             else
@@ -1573,28 +1598,28 @@ validStrategy mode conditions =
     in
     case mode of
         Horizontal3 _ ->
-            if List.length conditions /= 3 then
+            if List.length conditions_ /= 3 then
                 False
 
             else
-                isComplete
+                isComplete conditions_
 
         Vertical3 _ ->
             True
 
         Vertical2Horizontal1 _ ->
-            if List.length conditions /= 3 then
+            if List.length conditions_ /= 3 then
                 False
 
             else
-                isComplete
+                isComplete (List.drop 1 conditions_)
 
         Horizontal2Vertical1 _ ->
-            if List.length conditions /= 2 then
+            if List.length conditions_ /= 2 then
                 False
 
             else
-                isComplete
+                isComplete conditions_
 
 
 dbTupleToList ( db1, db2, db3 ) =
@@ -1614,9 +1639,6 @@ typeToString fieldType =
 
         VarChar ->
             "String"
-
-        Bool ->
-            "Bool"
 
 
 stepToString : Step -> ( String, String )
@@ -1659,7 +1681,7 @@ fieldToType (Field _ fieldType) =
 dbName db =
     case db of
         PostgreSQL ->
-            "PostgreSQL"
+            "Postgres"
 
         MySQL ->
             "MySQL"
@@ -1709,13 +1731,14 @@ applyValue condition value =
             GreaterThanOrEqualTo value
 
 
+uploadSettings : Model -> Cmd Msg
 uploadSettings model =
     let
         databases =
             let
                 encoder db =
                     Encode.object
-                        [ ( "name", Encode.string (dbName db) )
+                        [ ( "name", Encode.string (String.toLower (dbName db)) )
 
                         -- , ( "fieldType", Encode.string (fieldType field) )
                         ]
@@ -1729,13 +1752,29 @@ uploadSettings model =
             Encode.list
                 (\( k, v ) ->
                     Encode.object
-                        [ ( "db", Encode.string k )
-                        , ( "fields", encodeFields (v ++ primaryKeyField) )
+                        [ ( "db", Encode.string (String.toLower k) )
+                        , ( "fields", encodeFields (primaryKeyField ++ v) )
+                        , ( "conditions"
+                          , Dict.get k model.conditions
+                                |> Maybe.withDefault Nothing
+                                |> encodeConditions
+                          )
                         ]
                 )
                 (Dict.toList
                     model.allocations
                 )
+
+        encodeConditions condition_ =
+            case condition_ of
+                Just ( condition, floatInput ) ->
+                    Encode.object
+                        [ ( "field", Encode.string (conditionToString condition) )
+                        , ( "value", Encode.int (round (FloatInput.toFloat floatInput)) )
+                        ]
+
+                Nothing ->
+                    Encode.object []
 
         encodeFields fields =
             let
