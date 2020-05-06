@@ -55,7 +55,6 @@ type Step
         { pickedUpField : Maybe Field
         , pickedUpCondition : Maybe Condition
         }
-    | Summary
 
 
 type Problem
@@ -110,7 +109,6 @@ init key =
                 { pickedUpField = Nothing
                 , pickedUpCondition = Nothing
                 }
-            , Summary
             ]
       , typeDropdownState = Dropdown.init "" (Just PrimaryKey)
       , fields = []
@@ -161,7 +159,6 @@ type Msg
     | ClearFilterField
     | UpdatedConditionValue (List DB) FloatInput
     | SetCondition (List DB)
-    | Save
     | ServerResponse (WebData ())
 
 
@@ -552,35 +549,34 @@ update msg model_ =
                             else if Set.size assignedFields + 1 /= List.length model.fields then
                                 [ "Each field must be assigned" ]
 
-                            else if not (validStrategy model.selectedMode (List.map Tuple.first (List.filterMap identity (Dict.values model.conditions)))) then
-                                [ "The conditions you provided do not cater for the full range of possible values or overlaps ranges" ]
-
                             else
-                                []
+                                validateStrategy model.selectedMode (List.map Tuple.first (List.filterMap identity (Dict.values model.conditions))) model.filterField
 
                         _ ->
                             []
             in
             if problems == [] then
-                case ( List.head model.nextSteps, List.drop 1 model.nextSteps ) of
-                    ( Just head, nextSteps ) ->
-                        ( { model
-                            | previousSteps = model.previousSteps ++ [ model.currentStep ]
-                            , currentStep = head
-                            , nextSteps = nextSteps
-                            , problems = []
-                          }
-                        , Cmd.none
-                        )
+                case model.currentStep of
+                    AttributeAllocations _ ->
+                        ( { model | problems = problems }, uploadSettings model )
 
                     _ ->
-                        ( model, Cmd.none )
+                        case ( List.head model.nextSteps, List.drop 1 model.nextSteps ) of
+                            ( Just head, nextSteps ) ->
+                                ( { model
+                                    | previousSteps = model.previousSteps ++ [ model.currentStep ]
+                                    , currentStep = head
+                                    , nextSteps = nextSteps
+                                    , problems = []
+                                  }
+                                , Cmd.none
+                                )
+
+                            _ ->
+                                ( model, Cmd.none )
 
             else
                 ( { model | problems = problems }, Cmd.none )
-
-        Save ->
-            ( model, uploadSettings model )
 
         ServerResponse response ->
             let
@@ -620,14 +616,6 @@ view model =
 
             AttributeAllocations _ ->
                 viewAllocations model
-
-            Summary ->
-                el [ centerX, centerY ]
-                    (StyledElement.button []
-                        { label = text "Save"
-                        , onPress = Just Save
-                        }
-                    )
         ]
 
 
@@ -653,14 +641,23 @@ viewHeading model =
                     (Style.captionStyle ++ [ Font.center, centerX ])
                     (text (stepToString model.currentStep |> Tuple.second))
                 ]
-            , StyledElement.hoverButton
-                [ alignRight
-                , transparent (model.nextSteps == [])
-                ]
-                { title = "Next"
-                , onPress = Just GoForward
-                , icon = Nothing
-                }
+            , case model.currentStep of
+                AttributeAllocations _ ->
+                    StyledElement.button
+                        [ alignRight ]
+                        { label = text "Save"
+                        , onPress = Just GoForward
+                        }
+
+                _ ->
+                    StyledElement.hoverButton
+                        [ alignRight
+                        , transparent (model.nextSteps == [])
+                        ]
+                        { title = "Next"
+                        , onPress = Just GoForward
+                        , icon = Nothing
+                        }
             ]
         ]
 
@@ -1101,7 +1098,10 @@ viewAllocations model =
         visibleFields =
             List.filter (\f -> not (List.member f allocatedFields) && not (fieldToType f == PrimaryKey)) model.fields
     in
-    row [ width fill, height fill ]
+    row
+        [ width fill
+        , height fill
+        ]
         [ viewSplitStrategySelection model
         , column [ width fill, height fill, padding 40 ]
             [ el [ height (px 100) ] none
@@ -1462,7 +1462,7 @@ conditionToRange condition =
             ( Inclusive (toFloat value), Inclusive (toFloat value) )
 
 
-validStrategy mode conditions_ =
+validateStrategy mode conditions_ filterField =
     let
         compareRangeMin min1 min2 =
             case ( min1, min2 ) of
@@ -1537,9 +1537,6 @@ validStrategy mode conditions_ =
                 sortedConditions =
                     Debug.log "sortedConditions"
                         (List.map conditionToRange (List.sortWith compareConditions conditions))
-
-                _ =
-                    Debug.log "sortedConditions" sortedConditions
             in
             List.foldl
                 (\( minValue, maxValue ) ( ( oldMin, oldMax ), overlaps ) ->
@@ -1566,7 +1563,7 @@ validStrategy mode conditions_ =
                                             val > val2
 
                                         ( Inclusive val, Exclusive val2 ) ->
-                                            val < val2
+                                            val > val2
 
                                         _ ->
                                             True
@@ -1595,31 +1592,41 @@ validStrategy mode conditions_ =
                         in
                         fullRange && not overlapping
                    )
+
+        completeRanges =
+            case mode of
+                Horizontal3 _ ->
+                    if List.length conditions_ /= 3 then
+                        False
+
+                    else
+                        isComplete conditions_
+
+                Vertical3 _ ->
+                    True
+
+                Vertical2Horizontal1 _ ->
+                    if List.length conditions_ /= 3 then
+                        False
+
+                    else
+                        isComplete (List.drop 1 conditions_)
+
+                Horizontal2Vertical1 _ ->
+                    if List.length conditions_ /= 2 then
+                        False
+
+                    else
+                        isComplete conditions_
     in
-    case mode of
-        Horizontal3 _ ->
-            if List.length conditions_ /= 3 then
-                False
+    if filterField == Nothing then
+        [ "Provide a filter field" ]
 
-            else
-                isComplete conditions_
+    else if not completeRanges then
+        [ "The conditions you provided do not cater for the full range of possible values or overlaps ranges" ]
 
-        Vertical3 _ ->
-            True
-
-        Vertical2Horizontal1 _ ->
-            if List.length conditions_ /= 3 then
-                False
-
-            else
-                isComplete (List.drop 1 conditions_)
-
-        Horizontal2Vertical1 _ ->
-            if List.length conditions_ /= 2 then
-                False
-
-            else
-                isComplete conditions_
+    else
+        []
 
 
 dbTupleToList ( db1, db2, db3 ) =
@@ -1662,11 +1669,6 @@ stepToString step =
         AttributeAllocations _ ->
             ( "Attribute Allocations"
             , "Place the fields in the desired fragment.\nIf necessary, provide the horizontal fragmentation criteria"
-            )
-
-        Summary ->
-            ( "Summary"
-            , "Confirm your setup and save"
             )
 
 
@@ -1769,7 +1771,8 @@ uploadSettings model =
             case condition_ of
                 Just ( condition, floatInput ) ->
                     Encode.object
-                        [ ( "field", Encode.string (conditionToString condition) )
+                        [ ( "condition", Encode.string (conditionToString condition) )
+                        , ( "field", Encode.string (Maybe.withDefault "" (Maybe.andThen (fieldName >> Just) model.filterField)) )
                         , ( "value", Encode.int (round (FloatInput.toFloat floatInput)) )
                         ]
 

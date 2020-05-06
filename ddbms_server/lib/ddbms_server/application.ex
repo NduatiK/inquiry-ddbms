@@ -19,15 +19,6 @@ defmodule DdbmsServer.Application do
   end
 
   def start_dbs() do
-    # cmd = """
-    # docker-compose down & docker-compose up --abort-on-container-exit --force-recreate
-    # """
-    # cmd = """
-    # docker-compose down --force & docker-compose up  --force-recreate
-    # """
-    # cmd = """
-    # docker-compose --no-ansi  down -v  --remove-orphans & docker-compose --no-ansi up --force-recreate  -d
-    # """
     cmd = """
     docker-compose --no-ansi up --force-recreate  -V -d
     """

@@ -191,7 +191,8 @@ view model =
         , text "select * from tbl;"
         , text "insert into tbl (id, age, name) values (2, 1,\"tom\");"
         , text "insert into tbl (age, dept, name, salary) values (20, \"IM\",\"tom\",20000);"
-        , text "insert into tbl (age, dept, name, salary) values (20, \"IM\",\"tom\",20000);"
+        , text "insert into tbl (age, dept, name, salary) values (20, \"IM\",\"tom\",10000);"
+        , text "insert into tbl (age, dept, name, salary) values (20, \"IM\",\"tom\",8000);"
 
         --         , el [] (text
         ]

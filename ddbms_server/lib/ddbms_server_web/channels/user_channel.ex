@@ -7,6 +7,12 @@ defmodule DdbmsServerWeb.UserChannel do
 
   def handle_in("query", %{"script" => script}, socket) do
     script = script |> String.trim()
+    send_to_channel(
+      """
+      --------------------
+      #{script}
+      --------------------
+      """)
 
     with "SELECT" <> _asd <- String.upcase(script) do
       DdbmsServer.DatabaseInterface.select(script)

@@ -134,6 +134,7 @@ defmodule DdbmsServer.DatabaseInterface do
 
   def handle_cast({:insert, script}, state) do
     primary_key = state["primary_key"]
+    IO.inspect(state)
 
     reg = ~r/insert into.*?\((.*?)\) values \((.*?)\);*/
 
@@ -191,6 +192,7 @@ defmodule DdbmsServer.DatabaseInterface do
             |> Enum.map(fn part ->
               %{
                 "db" => db,
+                "conditions" => conditions,
                 "fields" => db_fields
               } = part
 
@@ -198,25 +200,29 @@ defmodule DdbmsServer.DatabaseInterface do
                 db_fields
                 |> Enum.map(&Map.get(&1, "name"))
 
+              if not meets_conditions(conditions, fields_values) do
+                nil
+              else
+                # Only insert valid values
+                {matching_fields, matching_values} =
+                  fields_values
+                  |> Enum.filter(fn {field_name, field_value} ->
+                    field_name in db_field_names
+                  end)
+                  |> Enum.unzip()
 
-              {matching_fields, matching_values} =
-                fields_values
-                |> Enum.filter(fn {x, _} ->
-                  x in db_field_names
-                end)s
-                |> Enum.unzip()
-
-              "insert into tbl (#{Enum.join(matching_fields, ", ")}) values (#{
-                Enum.join(matching_values, ", ")
-              })"
-              |> String.downcase()
-              |> String.replace("insert into tbl", "insert into #{db}_tbl")
-              |> localize_sql(db)
-              |> DdbmsServerWeb.UserChannel.send_to_channel(label: "📧 → #{db}: ")
-              |> localize_cmd(db)
-              |> String.to_charlist()
-              |> :os.cmd()
-              |> DdbmsServerWeb.UserChannel.send_to_channel(delay: 100)
+                "insert into tbl (#{Enum.join(matching_fields, ", ")}) values (#{
+                  Enum.join(matching_values, ", ")
+                })"
+                |> String.downcase()
+                |> String.replace("insert into tbl", "insert into #{db}_tbl")
+                |> localize_sql(db)
+                |> DdbmsServerWeb.UserChannel.send_to_channel(label: "📧 → #{db}: ")
+                |> localize_cmd(db)
+                |> String.to_charlist()
+                |> :os.cmd()
+                |> DdbmsServerWeb.UserChannel.send_to_channel(delay: 100)
+              end
 
               # end)
             end)
@@ -371,5 +377,55 @@ defmodule DdbmsServer.DatabaseInterface do
       db
     };  #{sql}" | #{db} -sN'
     """
+  end
+
+  def meets_conditions(%{"field" => field} = condition_params, field, value) do
+    %{"condition" => condition, "value" => condition_value} = condition_params
+
+    try do
+      try do
+        IO.inspect(value)
+        String.to_float(value)
+      rescue
+        _ ->
+          String.to_integer(value) + 0.0
+      else
+        value ->
+          value
+      end
+    rescue
+      _ ->
+        false
+    else
+      value ->
+        cond do
+          value > condition_value && String.contains?(condition, ">") ->
+            true
+
+          value < condition_value && String.contains?(condition, "<") ->
+            true
+
+          value == condition_value && String.contains?(condition, "=") ->
+            true
+
+          true ->
+            false
+        end
+    end
+  end
+
+  def meets_conditions(_, _, _) do
+    true
+  end
+
+  def meets_conditions(%{"field" => field} = conditions, fields_values) do
+    fields_values
+    |> Enum.any?(fn {field_name, field_value} ->
+      field == field_name && meets_conditions(conditions, field_name, field_value)
+    end)
+    |> IO.inspect()
+  end
+  def meets_conditions(%{} = conditions, fields_values) do
+    true
   end
 end
