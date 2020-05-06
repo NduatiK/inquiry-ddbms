@@ -56,7 +56,12 @@ update msg model =
             ( model, Cmd.none )
 
         ReceivedMessage message ->
-            ( { model | receivedMessages = model.receivedMessages ++ [ message ] }
+            ( { model
+                | receivedMessages =
+                    model.receivedMessages
+                        ++ [ message
+                           ]
+              }
             , Browser.Dom.getViewportOf consoleId
                 |> Task.andThen (.scene >> .height >> Browser.Dom.setViewportOf consoleId 0)
                 |> Task.onError (\_ -> Task.succeed ())
@@ -122,7 +127,7 @@ view model =
                 , htmlAttribute (Html.Attributes.id consoleId)
                 , htmlAttribute (Html.Attributes.style "scroll-behavior" "smooth")
                 ]
-                (textColumn [ spacing 30, width fill ]
+                (textColumn [ spacing 0, width fill ]
                     (List.map
                         (\x ->
                             paragraph
@@ -185,6 +190,8 @@ view model =
             )
         , text "select * from tbl;"
         , text "insert into tbl (id, age, name) values (2, 1,\"tom\");"
+        , text "insert into tbl (age, dept, name, salary) values (20, \"IM\",\"tom\",20000);"
+        , text "insert into tbl (age, dept, name, salary) values (20, \"IM\",\"tom\",20000);"
 
         --         , el [] (text
         ]

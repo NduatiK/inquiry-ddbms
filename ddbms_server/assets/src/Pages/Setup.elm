@@ -1791,6 +1791,7 @@ uploadSettings model =
                 [ ( "databases", databases )
                 , ( "partitioning", partitioning )
                 , ( "all_fields", encodeFields model.fields )
+                , ( "primary_key", Encode.string (Maybe.withDefault "" (Maybe.andThen (fieldName >> Just) (List.head primaryKeyField))) )
                 ]
                 |> Http.jsonBody
     in
