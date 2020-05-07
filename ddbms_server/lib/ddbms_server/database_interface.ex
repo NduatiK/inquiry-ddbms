@@ -430,6 +430,7 @@ defmodule DdbmsServer.DatabaseInterface do
   end
 
   def handle_cast(:reset, state) do
+    # Just restart the containers
     DdbmsServer.Application.start_dbs()
     |> IO.inspect()
     |> DdbmsServerWeb.UserChannel.send_to_channel()

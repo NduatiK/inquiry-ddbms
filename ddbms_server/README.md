@@ -1,5 +1,27 @@
 # DdbmsServer
 
+- [DdbmsServer](#ddbmsserver)
+- [Architecture](#architecture)
+  - [Requirements](#requirements)
+  - [Code Walkthrough](#code-walkthrough)
+    - [Backend](#backend)
+    - [1. Define schema](#1-define-schema)
+    - [2. Decide fragmentation](#2-decide-fragmentation)
+    - [3. Allocate databases](#3-allocate-databases)
+    - [3b. Allocate databases (done)](#3b-allocate-databases-done)
+    - [4. Allocate Attribute + Add Conditions](#4-allocate-attribute--add-conditions)
+    - [5. Database sets up](#5-database-sets-up)
+    - [6. Start querying](#6-start-querying)
+  - [Learn more](#learn-more)
+
+# Architecture
+ ![](screenshots/ArchSimple.png)
+
+
+![](screenshots/ArchDense.png)
+
+
+
 ## Requirements
   * Install Elixir and Phoenix (see Learn More below for more information)
   * Install Docker
@@ -15,31 +37,31 @@ Now you can visit [`localhost:4001`](http://localhost:4001) from your browser.
 
 ## Code Walkthrough
 
-### Startup
+### Backend
+
+**Startup**
 
 When the backend is started with `mix phx.server`,  `/lib/ddbms_server/application.ex` is called and the `&start\2` method run. This calls the `&start_dbs\0` method which makes a system call to setup the databases based on the config in the `./docker-compose.yml` file. If you do not have the containers, it will pull them for you (which may take time...).
 
-### Front end
+**Execution**
+
 
 At this point, you can setup the database by opening [`localhost:4001`](http://localhost:4001) and clicking on the Setup button on the top left.
 
 ### 1. Define schema
 ![](screenshots/1. Define schema.png)
 
-### 2. Define schema (filled)
-![](screenshots/2. Define schema (filled).png)
-
-### 3. Decide fragmentation
+### 2. Decide fragmentation
 ![](screenshots/3. Decide fragmentation.png)
 
-### 4. Allocate databases
+### 3. Allocate databases
 ![](screenshots/4. Allocate databases.png)
 
-### 4b. Allocate databases (done)
+### 3b. Allocate databases (done)
 ![](screenshots/4b. Allocate databases (done).png)
 
 
-### 5. Allocate Attribute + Add Conditions
+### 4. Allocate Attribute + Add Conditions
 
 ![](screenshots/5. Allocate Attribute + Add Conditions.png)
 
@@ -75,7 +97,7 @@ The request takes this format
  }
 ```
 
-### 6. Database sets up
+### 5. Database sets up
 ![](screenshots/6. Database sets up.png)
 
 The databases sets up. This can be seen at `/lib/ddbms_server/database_interface.ex`. It's a long file, so look for the line starting with `def handle_cast({:setup, parts},`
@@ -85,7 +107,7 @@ Note that at the end of the funtion, we return `{:noreply, Map.put(parts, "id", 
 Before clicking save, open a second browser window at `localhost:4001` in order to see the specific CREATE TABLE requests that are sent to each database. If you chose anything related to vertical fragmentation, you will see that the CREATE statements are different. Look at the line starting with `field_parts =` in the setup function to see how.
 
 
-### 7. Start querying
+### 6. Start querying
 ![](screenshots/7. Sending queries.png)
 
 Once the database is setup, return to `localhost:4001` to make queries.
@@ -98,7 +120,7 @@ Use the script textfield at the bottom to start making requests.
 The code for this on the backend can be seen at `/lib/ddbms_server/database_interface.ex`.
 It's a long file, so look for the line starting with `def handle_cast({:select,` and `def handle_cast({:insert,`
 
-`Programming is just data and transformations on that data. Dave Thomas` 
+***Programming is just data and transformations on that data. Dave Thomas***
 
 We are using a lot of pipes to transform data in steps. 
 Each time you see the pipe operator (`|>`), it means that we are taking the input from the previous function and inserting it into the next function as the first input. 
@@ -107,7 +129,8 @@ Welcome to functional programming! The goal is to chain many small and simple fu
 
 If you are not sure about what a function does, you can add an (IO.inspect() function call before and after it)
 
-Change this 
+Change this
+
 ```
 ...
   |> transform1()
@@ -117,6 +140,7 @@ Change this
 ```
 
 Into this
+
 ```
 ...
   |> transform1()
@@ -127,7 +151,7 @@ Into this
   |> ...
 ```
 
-Comments for select and insert are in the code
+Comments for setup, select and insert are in the code
 
 ## Learn more
 
