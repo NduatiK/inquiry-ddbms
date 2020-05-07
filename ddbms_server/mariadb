@@ -1,1 +1,0 @@
-CREATE DATABASE IF NOT EXISTS mariadb; USE mariadb; CREATE TABLE mariadb_table ( salary DOUBLE(10,3), age VARCHAR(255), id INT PRIMARY KEY);

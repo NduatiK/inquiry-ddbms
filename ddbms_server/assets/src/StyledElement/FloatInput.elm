@@ -9,7 +9,6 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Input as Input
-import Errors exposing (InputError)
 import Icons exposing (IconBuilder)
 import Regex
 import Style exposing (..)
@@ -32,12 +31,15 @@ toFloat floatInput_ =
             float
 
 
+{-| Why make an input for floats?
+So that I can keep track of text like "0." while
+making sure that only numbers are entered
+-}
 view :
     List (Attribute msg)
     ->
         { title : String
         , caption : Maybe String
-        , errorCaption : Maybe InputError
         , value : FloatInput
         , onChange : FloatInput -> msg
         , placeholder : Maybe (Input.Placeholder msg)
@@ -47,7 +49,7 @@ view :
         , maximum : Maybe Float
         }
     -> Element msg
-view attributes { title, caption, errorCaption, value, onChange, placeholder, ariaLabel, icon, minimum, maximum } =
+view attributes { title, caption, value, onChange, placeholder, ariaLabel, icon, minimum, maximum } =
     let
         ( originalValue, floatString ) =
             case value of
@@ -118,7 +120,6 @@ view attributes { title, caption, errorCaption, value, onChange, placeholder, ar
             wrappedInput textField
                 title
                 caption
-                errorCaption
                 icon
                 attributes
                 []

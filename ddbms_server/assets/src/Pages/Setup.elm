@@ -10,7 +10,6 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
-import Errors
 import Http
 import Icons
 import Json.Decode as Decode exposing (Decoder, int, list, string)
@@ -45,7 +44,6 @@ type alias Model =
 type Step
     = GlobalSchema
         { currentField : Field
-        , problems : List (Errors.Errors Problem)
         }
     | PartitioningMethod
     | ParticipatingDatabases
@@ -100,7 +98,6 @@ init key =
       , currentStep =
             GlobalSchema
                 { currentField = Field "id" PrimaryKey
-                , problems = []
                 }
       , nextSteps =
             [ PartitioningMethod
@@ -187,16 +184,14 @@ update msg model_ =
                 GlobalSchema data ->
                     if fieldToType data.currentField == PrimaryKey && List.any (\x -> fieldToType x == PrimaryKey) model.fields then
                         ( { model
-                            | currentStep =
-                                GlobalSchema { data | problems = Errors.toClientSideErrors [ ( OnlyOnePrimary, "There can only be one" ) ] ++ data.problems }
+                            | problems = [ "There can only be one primary key" ] ++ model.problems
                           }
                         , Cmd.none
                         )
 
                     else if fieldName data.currentField == "" || List.any (\x -> fieldName x == fieldName data.currentField) model.fields then
                         ( { model
-                            | currentStep =
-                                GlobalSchema { data | problems = Errors.toClientSideErrors [ ( EmptyField, "Unique non-empty value required" ) ] ++ data.problems }
+                            | problems = [ "Field names must be unique and non-empty" ] ++ model.problems
                           }
                         , Cmd.none
                         )
@@ -207,7 +202,6 @@ update msg model_ =
                             , currentStep =
                                 GlobalSchema
                                     { currentField = Field "" VarChar
-                                    , problems = []
                                     }
                           }
                         , Task.succeed (TypeDropdownMsg (Dropdown.selectOption VarChar)) |> Task.perform identity
@@ -223,7 +217,6 @@ update msg model_ =
                         | currentStep =
                             GlobalSchema
                                 { currentField = Field newName (fieldToType data.currentField)
-                                , problems = []
                                 }
                       }
                     , Cmd.none
@@ -470,7 +463,6 @@ update msg model_ =
                         | currentStep =
                             GlobalSchema
                                 { currentField = Field (fieldName data.currentField) newType
-                                , problems = []
                                 }
                       }
                     , Cmd.none
@@ -662,8 +654,8 @@ viewHeading model =
         ]
 
 
-viewGlobalSchema : Model -> { a | currentField : Field, problems : List (Errors.Errors Problem) } -> Element Msg
-viewGlobalSchema model { currentField, problems } =
+viewGlobalSchema : Model -> { a | currentField : Field } -> Element Msg
+viewGlobalSchema model { currentField } =
     let
         tableHeader text =
             el
@@ -681,7 +673,6 @@ viewGlobalSchema model { currentField, problems } =
                 ]
                 { title = "Name"
                 , caption = Nothing
-                , errorCaption = Errors.inputErrorsFor problems "field_name" [ EmptyField ]
                 , value = fieldName currentField
                 , onChange = UpdatedFieldName
                 , placeholder = Nothing
@@ -732,14 +723,6 @@ viewTypeDropDown model =
 typeDropDown : Model -> ( Element Msg, Dropdown.Config Type Msg, List Type )
 typeDropDown model =
     let
-        problems =
-            case model.currentStep of
-                GlobalSchema data ->
-                    data.problems
-
-                _ ->
-                    []
-
         types =
             [ PrimaryKey, VarChar, Double, Integer ]
     in
@@ -756,7 +739,6 @@ typeDropDown model =
         , prompt = Nothing
         , dropDownMsg = TypeDropdownMsg
         , dropdownState = model.typeDropdownState
-        , errorCaption = Errors.inputErrorsFor problems "primary" [ OnlyOnePrimary ]
         , icon = Nothing
         , onSelect =
             \x ->
@@ -1270,7 +1252,6 @@ viewStrategy mode scale showFieldSlots model =
                                         ]
                                         { title = ""
                                         , caption = Nothing
-                                        , errorCaption = Nothing
                                         , value = value
                                         , onChange = UpdatedConditionValue dbs
                                         , placeholder = Nothing
@@ -1618,8 +1599,16 @@ validateStrategy mode conditions_ filterField =
 
                     else
                         isComplete conditions_
+
+        isVertical3 =
+            case mode of
+                Vertical3 _ ->
+                    True
+
+                _ ->
+                    False
     in
-    if filterField == Nothing then
+    if filterField == Nothing && not isVertical3 then
         [ "Provide a filter field" ]
 
     else if not completeRanges then

@@ -8,7 +8,6 @@ import Dict exposing (Dict)
 import Element exposing (..)
 import Html.Attributes exposing (src)
 import Json.Decode exposing (Value)
-import Models.Bus exposing (LocationUpdate)
 import Navigation exposing (Route)
 import Page exposing (..)
 import Pages.Queries as Queries

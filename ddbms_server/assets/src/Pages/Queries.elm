@@ -180,7 +180,6 @@ view model =
                 ]
                 { ariaLabel = ""
                 , caption = Nothing
-                , errorCaption = Nothing
                 , icon = Nothing
                 , onChange = ChangedScript
                 , placeholder = Just (Input.placeholder [] (text "Enter your script"))
