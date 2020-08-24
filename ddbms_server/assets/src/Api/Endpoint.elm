@@ -7,6 +7,9 @@ module Api.Endpoint exposing
     , setup
     )
 
+{-| Api module inspired by elm-spa @rtfeldman
+-}
+
 import Http exposing (Body)
 import Json.Decode exposing (Decoder)
 import RemoteData exposing (RemoteData(..), WebData)
@@ -61,9 +64,6 @@ patch endpoint body decoder =
 
 
 -- ENDPOINTS
--- login : Endpoint
--- login =
---     url [ "auth", "manager", "login" ] []
 
 
 setup : Endpoint

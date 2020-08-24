@@ -1,8 +1,6 @@
 module Main exposing (..)
 
-import Api
 import Browser
-import Browser.Events
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Element exposing (..)
@@ -13,8 +11,6 @@ import Page exposing (..)
 import Pages.Queries as Queries
 import Pages.Setup as Setup
 import Style
-import Task
-import Time
 import Url
 
 
@@ -38,7 +34,7 @@ type PageModel
 
 
 init : Maybe Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init args url navKey =
+init _ url navKey =
     let
         ( model, cmds ) =
             changeRouteTo (Navigation.fromUrl url)

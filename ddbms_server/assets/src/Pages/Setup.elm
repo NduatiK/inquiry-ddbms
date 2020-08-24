@@ -1730,11 +1730,14 @@ uploadSettings model =
                 encoder db =
                     Encode.object
                         [ ( "name", Encode.string (String.toLower (dbName db)) )
-
-                        -- , ( "fieldType", Encode.string (fieldType field) )
                         ]
             in
-            Encode.list encoder (model.selectedMode |> modeToDBs |> dbTupleToList |> List.filterMap identity)
+            Encode.list encoder
+                (model.selectedMode
+                    |> modeToDBs
+                    |> dbTupleToList
+                    |> List.filterMap identity
+                )
 
         primaryKeyField =
             List.filter (\x -> fieldToType x == PrimaryKey) model.fields

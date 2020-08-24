@@ -4,6 +4,8 @@ import Element exposing (Attribute, Element, alpha, height, image, px, width)
 import Html.Attributes
 
 
+{-| Module for accessing SVG icon asset
+-}
 type alias IconBuilder msg =
     List (Attribute msg) -> Element msg
 

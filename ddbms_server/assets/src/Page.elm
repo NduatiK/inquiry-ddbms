@@ -3,10 +3,13 @@ module Page exposing (frame, transformToModelMsg)
 import Element exposing (..)
 import Element.Background as Background
 import Navigation exposing (Route)
-import Template.NavBar as NavBar exposing (viewHeader)
+import Template.NavBar exposing (viewHeader)
 
 
-{-| Transforms a (foreign model, foreign msg) into a (local model, msg)
+{-| Transforms a pages (model, msg) into another page's (model, msg)
+
+    Used to transform child pages into parent types.
+
 -}
 transformToModelMsg : (subModel -> model) -> (subMsg -> msg) -> ( subModel, Cmd subMsg ) -> ( model, Cmd msg )
 transformToModelMsg toModel toMsg ( subModel, subCmd ) =

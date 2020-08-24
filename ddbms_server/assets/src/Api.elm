@@ -1,11 +1,9 @@
-module Api exposing (..)
+module Api exposing (get, patch, post)
 
 import Api.Endpoint as Endpoint exposing (Endpoint)
 import Http exposing (Body)
-import Json.Decode as Decode exposing (Decoder, Value, bool, decodeString, dict, field, float, int, list, nullable, string)
-import Json.Decode.Pipeline exposing (required, requiredAt, resolve)
-import Json.Encode as Encode
-import RemoteData exposing (RemoteData(..), WebData)
+import Json.Decode exposing (Decoder)
+import RemoteData exposing (WebData)
 
 
 get : Endpoint -> Decoder a -> Cmd (WebData a)

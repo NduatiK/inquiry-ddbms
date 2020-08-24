@@ -6,6 +6,11 @@ import Url exposing (Url)
 import Url.Parser as Parser exposing (Parser, oneOf, s)
 
 
+{-|
+
+    A module for moving between pages by changing the URL
+
+-}
 type Route
     = Queries
     | Setup
@@ -15,10 +20,7 @@ pageParser : Parser (Route -> a) a
 pageParser =
     oneOf
         (Parser.map Queries Parser.top
-            :: parsersFor
-                [ Queries
-                , Setup
-                ]
+            :: parsersFor [ Queries, Setup ]
         )
 
 

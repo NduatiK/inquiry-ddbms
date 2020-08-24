@@ -1,6 +1,9 @@
 # DdbmsServer
 
+
 - [DdbmsServer](#ddbmsserver)
+- [Description](#description)
+  - [Interesting techinques used](#interesting-techinques-used)
 - [Architecture](#architecture)
   - [Requirements](#requirements)
   - [Code Walkthrough](#code-walkthrough)
@@ -13,6 +16,28 @@
     - [5. Database sets up](#5-database-sets-up)
     - [6. Start querying](#6-start-querying)
   - [Learn more](#learn-more)
+
+# Description
+
+An implementation of a distributed database using 
+  - 3 Docker container databases [Postgres, MySQL, MariaDB]
+  - Elixir as a database middleware
+  - Elm as the database frontend [for Setup and Queries]
+
+## Interesting techinques used
+- Starting and setting up Docker containers from Elixir using `:os.cmd` (`DdbmsServer.Application.start_dbs`)
+- Simple SQL query parsing using Regex
+- GUI based condition checking in order to ensure reasonable partitioning criteria 
+  - Does x > 10 AND x < 10 overlap?
+  - Does x > 10 AND x < 10 cover the entire range of values?
+  - Is the condition x > 10 inclusive or exclusive?
+- Lots and lots of pipes
+  -  **|>** doA
+  -  **|>** thenB
+  -  **|>** thenC
+- Lots and lots of tiny functions
+
+
 
 # Architecture
  ![](screenshots/ArchSimple.png)
@@ -49,21 +74,21 @@ When the backend is started with `mix phx.server`,  `/lib/ddbms_server/applicati
 At this point, you can setup the database by opening [`localhost:4001`](http://localhost:4001) and clicking on the Setup button on the top left.
 
 ### 1. Define schema
-![](screenshots/1. Define schema.png)
+![](./screenshots/1.%20Define%20schema.png)
 
 ### 2. Decide fragmentation
-![](screenshots/3. Decide fragmentation.png)
+![](screenshots/3.%20Decide%20fragmentation.png)
 
 ### 3. Allocate databases
-![](screenshots/4. Allocate databases.png)
+![](screenshots/4.%20Allocate%20databases.png)
 
 ### 3b. Allocate databases (done)
-![](screenshots/4b. Allocate databases (done).png)
+![](./screenshots/4b.%20Allocate%20databases%20(done).png)
 
 
 ### 4. Allocate Attribute + Add Conditions
 
-![](screenshots/5. Allocate Attribute + Add Conditions.png)
+![](screenshots/5.%20Allocate%20Attribute%20+%20Add%20Conditions.png)
 
 Click Done and the frontend lets the backend know what the configuration (the catalogue) is. A request is sent to `http://localhost:4001/api/setup` (found at `lib/ddbms_server_web/controllers/page_controller.ex`).
 

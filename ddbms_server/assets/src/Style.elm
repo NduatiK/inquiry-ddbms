@@ -29,6 +29,17 @@ module Style exposing
     , tableHeaderStyle
     )
 
+{-| A module for convenince function for styling.
+
+    Much better to use compiler checked function names everywhere
+    and only use strings in a single place (here)
+
+    Elm-ui does a good job of wrapping CSS but in those rare cases where its needed,
+    the preference is to simply name the class and use CSS (which is IDE-aided) for
+    the actual styling
+
+-}
+
 import Colors exposing (..)
 import Element exposing (..)
 import Element.Background as Background

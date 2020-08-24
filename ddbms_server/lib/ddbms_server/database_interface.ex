@@ -1,6 +1,27 @@
 defmodule DdbmsServer.DatabaseInterface do
   use GenServer
+  @moduledoc """
+  Here lies the logic of the distributed system
 
+  This GenServer handles four operations:
+    * Setup
+    In which the front end provides all the information
+    needed to setup all the databasess and stores it in a
+    database catalogue in memory
+
+    * Select
+    Which uses the catalogue to perform selection queries across vertically and
+    horizontally fragmented databases
+
+    * Insert
+    Which uses the catalogue to perform insertions queries across vertically and
+    horizontally fragmented databases
+
+    *Reset
+    Which scraps all the stored database information
+  """
+
+  # These are the databases used by the DDBMs
   @database_locations %{
     "mysql" => "ddbms_server_mysql_1",
     "postgres" => "ddbms_server_postgres_1",

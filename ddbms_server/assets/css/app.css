@@ -16,18 +16,6 @@ text {
     white-space: pre-wrap;
 }
 
-gmap,
-google-map-cached {
-    width: 100%;
-    height: 100%;
-}
-
-
-
-.blurred {
-    backdrop-filter: blur(4px);
-}
-
 .animatesShadow:not(.animatesNone) {
     transition: box-shadow, transform, border 250ms 50ms;
     transition-timing-function: var(--cubic)

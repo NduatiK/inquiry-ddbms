@@ -5,6 +5,39 @@ module StyledElement.FloatInput exposing
     , view
     )
 
+{-| A specialization of a StyledElement that allows the input of floats
+
+    Why make an input for floats?
+    So that I can keep track of text like "0." while
+    making sure that only numbers are entered
+
+    Text | Number
+    --- | ---
+    0.1 | 0.1
+    0. | 0
+    .3 | 0.3
+
+    This helps prevent impossible inputs such as 100..0 while
+    not falling into the trap of converting the input into a float and back into a string
+    which could destroy meaningfull data
+
+    So instead of
+    Input ->  Storage ->  View Update Text
+    "10." ->     10      ->  "10"
+
+    which would make it impossible to input decimal values
+    ie 10.1 would become 101
+
+    We do
+    Input ->  Storage    ->  View Update Text
+    "10." ->  ("10.",10) ->  "10."
+    Which would prevent invalid internal float values
+    while allowing the user to input anything that can be parsed into a float
+
+    Also, floats are bounded to 2 dp
+
+-}
+
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -31,10 +64,6 @@ toFloat floatInput_ =
             float
 
 
-{-| Why make an input for floats?
-So that I can keep track of text like "0." while
-making sure that only numbers are entered
--}
 view :
     List (Attribute msg)
     ->

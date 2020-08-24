@@ -16,6 +16,10 @@ module StyledElement exposing
     , wrappedInput
     )
 
+{-| Similar to the Style module, this module provides convenince functions for styling.
+It however preapplies the styling to views to create something akin to a design system.
+-}
+
 import Colors
 import Element exposing (..)
 import Element.Background as Background
@@ -24,11 +28,8 @@ import Element.Font as Font
 import Element.Input as Input
 import Html exposing (node)
 import Html.Attributes exposing (id)
-import Http
 import Icons exposing (IconBuilder)
-import Json.Encode as Encode
 import Navigation
-import Regex
 import Style exposing (..)
 import StyledElement.DropDown as Dropdown
 

@@ -7,7 +7,12 @@ module StyledElement.DropDown exposing
     , dropDownConfig, filterText, selectOption, toDropDownView
     )
 
-{-| Elm UI Dropdown.
+{-|
+
+
+## PaackEng's Elm UI Dropdown with some modifications for visual consistency
+
+Elm UI Dropdown.
 MIT License
 
 Copyright (c) 2019 PaackEng
