@@ -123,7 +123,7 @@ The request takes this format
 ```
 
 ### 5. Database sets up
-![](screenshots/6. Database sets up.png)
+![](screenshots/6.%20Database%20sets%20up.png)
 
 The databases sets up. This can be seen at `/lib/ddbms_server/database_interface.ex`. It's a long file, so look for the line starting with `def handle_cast({:setup, parts},`
 
